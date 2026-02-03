@@ -33,6 +33,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# --- 🟢 SYSTEM STATUS MARKER ---
+st.success("SYSTEM STATUS: v31.0 (POPULATED) IS LIVE")
+
 # --- 🎨 THE "SINGULARITY" THEME ---
 st.markdown("""
     <style>
@@ -118,7 +121,7 @@ def init_db():
             ("Tania Sultana", "CAD Designer", 42000, "Active"),
             ("Jashim Uddin", "Security Guard", 11000, "Active"),
         ]
-        # Multiply to make it look big
+        # Multiply to make it look big (3x Loop)
         for _ in range(3): 
             for emp in fake_employees:
                 c.execute("INSERT INTO employees (name, role, salary, status) VALUES (?, ?, ?, ?)", 
@@ -157,9 +160,10 @@ def check_password():
         return False
     return st.session_state["password_correct"]
 
-# --- 🧠 LOGIC & UTILS (BULLETPROOF DATA LOADING) ---
+# --- 🧠 LOGIC & UTILS (BULLETPROOF FAIL-SAFE MARKET DATA) ---
 @st.cache_data(ttl=3600)
 def load_market_data():
+    # 1. PREPARE FALLBACK DATA FIRST (Guarantees no crash)
     dates = pd.date_range(end=pd.Timestamp.today(), periods=100)
     df_safe = pd.DataFrame(index=dates)
     df_safe['Cotton_USD'] = np.random.normal(85, 2, 100)
@@ -167,17 +171,37 @@ def load_market_data():
     df_safe['Yarn_Fair_Value'] = ((df_safe['Cotton_USD']/100) * 1.6) + (df_safe['Gas_USD'] * 0.15) + 0.40
 
     try:
+        # 2. ATTEMPT REAL DOWNLOAD
         data = yf.download(['CT=F', 'NG=F'], period="1y", interval="1d", progress=False)
-        if data is None or data.empty: return df_safe
+        
+        # 3. IF DATA IS EMPTY, RETURN SAFE IMMEDIATELY
+        if data is None or data.empty:
+            return df_safe
+            
+        # 4. HANDLE MULTI-INDEX (The most common Yahoo bug)
         if isinstance(data.columns, pd.MultiIndex):
-            if 'Close' in data.columns.get_level_values(0): data = data.xs('Close', level=0, axis=1)
-            else: return df_safe
-        if 'Close' in data: data = data['Close']
-        if data.empty: return df_safe
+            # Try to flatten or select 'Close'
+            if 'Close' in data.columns.get_level_values(0):
+                data = data.xs('Close', level=0, axis=1)
+            else:
+                return df_safe
+
+        # 5. HANDLE 'Close' COLUMN
+        if 'Close' in data:
+            data = data['Close']
+
+        # 6. DOUBLE CHECK EMPTY AGAIN
+        if data.empty:
+            return df_safe
+
+        # 7. RENAME AND CALCULATE
         data.columns = ['Cotton_USD', 'Gas_USD']
         data['Yarn_Fair_Value'] = ((data['Cotton_USD']/100) * 1.6) + (data['Gas_USD'] * 0.15) + 0.40
         return data.dropna()
-    except Exception: return df_safe
+
+    except Exception:
+        # 8. IF ANYTHING CRASHES, RETURN SAFE DATA
+        return df_safe
 
 def get_news_stealth():
     try: return feedparser.parse(requests.get("https://news.google.com/rss/search?q=Bangladesh+Textile+Industry+when:3d&hl=en-BD&gl=BD&ceid=BD:en").content).entries[:4]
@@ -249,7 +273,11 @@ if check_password():
         if st.button("LOGOUT"): st.session_state["password_correct"] = False; st.rerun()
 
     df = load_market_data()
-    yarn_cost = df['Yarn_Fair_Value'].iloc[-1]
+    # SAFE INDEXING (Prevents Crash)
+    if not df.empty:
+        yarn_cost = df['Yarn_Fair_Value'].iloc[-1]
+    else:
+        yarn_cost = 4.50 # Ultimate fallback
 
     # 1. MARKET INTELLIGENCE
     if menu == "MARKET INTELLIGENCE":
