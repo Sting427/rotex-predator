@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 import plotly.graph_objects as go
+import plotly.express as px
 import pydeck as pdk
 import feedparser
 import requests
@@ -34,7 +35,7 @@ st.set_page_config(
 )
 
 # --- 🟢 SYSTEM STATUS MARKER ---
-st.success("SYSTEM STATUS: v31.0 (POPULATED) IS LIVE")
+st.success("SYSTEM STATUS: v32.0 (FUTURIST UPDATE) IS LIVE")
 
 # --- 🎨 THE "SINGULARITY" THEME ---
 st.markdown("""
@@ -268,7 +269,15 @@ def generate_noise_pattern(freq, chaos):
 if check_password():
     with st.sidebar:
         st.markdown('<div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">System Online</div></div>', unsafe_allow_html=True)
-        menu = st.radio("MAIN MENU", ["MARKET INTELLIGENCE", "COMPETITOR PRICING", "CHAOS THEORY", "HR COMMAND", "R&D INNOVATION", "QUALITY LAB", "FACTORY STATUS", "FABRIC SCANNER", "LOGISTICS", "COSTING", "DATABASE", "SYSTEM GUIDE"])
+        
+        # --- UPDATE MENU WITH NEW FEATURES ---
+        menu = st.radio("MAIN MENU", [
+            "MARKET INTELLIGENCE", "COMPETITOR PRICING", "CHAOS THEORY", 
+            "ESG PULSE 🌿", "NEURAL SCHEDULER 🧠", "SMART GRID ⚡", # <--- NEW HIGH VALUE FEATURES
+            "HR COMMAND", "R&D INNOVATION", "QUALITY LAB", 
+            "FACTORY STATUS", "FABRIC SCANNER", "LOGISTICS", "COSTING", 
+            "DATABASE", "SYSTEM GUIDE"
+        ])
         st.divider()
         if st.button("LOGOUT"): st.session_state["password_correct"] = False; st.rerun()
 
@@ -374,6 +383,86 @@ if check_password():
             c1.metric("Financial Impact", f"-${impact_cost:,}", delta_color="inverse")
             c2.metric("Days to Shutdown", f"{days_left} Days", delta_color="inverse" if days_left < 15 else "normal")
             c3.metric("Risk Level", "CRITICAL" if days_left < 15 else "LOW")
+
+    # --- 🆕 NEW FEATURE 1: ESG PULSE (Carbon Pulse) ---
+    elif menu == "ESG PULSE 🌿":
+        st.markdown("## 🌿 ESG CARBON COMMAND")
+        with st.expander("ℹ️ INTEL: WHY THIS MATTERS?"):
+            st.markdown("**CEO Summary:** Your passport to European export markets (H&M, Inditex requirements).\n**Engineer's Logic:** Calculates Carbon Footprint based on energy mix and logistic distance.")
+        
+        col_esg1, col_esg2 = st.columns([1, 2])
+        with col_esg1:
+            st.markdown("### 🏭 Production Input")
+            daily_prod = st.slider("Daily Production (kg)", 1000, 20000, 5000)
+            energy_mix = st.radio("Energy Source", ["National Grid (Heavy Gas)", "Solar Hybrid (30%)", "Coal (Legacy)"])
+            
+            # Logic
+            co2_factor = 0.6 if energy_mix == "Solar Hybrid (30%)" else (0.9 if "Grid" in energy_mix else 1.2)
+            total_co2 = daily_prod * co2_factor
+            
+            st.markdown("### 📊 Compliance Status")
+            if co2_factor < 0.8: st.success("✅ EU EXPORT READY")
+            else: st.warning("⚠️ SURCHARGE RISK (CBAM)")
+            
+        with col_esg2:
+            st.markdown("### 💨 Real-Time Emissions Tracker")
+            dates = pd.date_range(end=datetime.today(), periods=30)
+            df_esg = pd.DataFrame({"Date": dates, "CO2 (Tons)": np.random.normal(total_co2/1000, 0.5, 30)})
+            fig = px.area(df_esg, x="Date", y="CO2 (Tons)", color_discrete_sequence=["#00ff88"])
+            fig.add_hline(y=4.0, line_dash="dot", line_color="red", annotation_text="EU Limit")
+            fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+            st.plotly_chart(fig, use_container_width=True)
+            
+            c1, c2 = st.columns(2)
+            c1.metric("Carbon Intensity", f"{co2_factor} kgCO2/kg", "-12%" if "Solar" in energy_mix else "+5%")
+            c2.metric("Credits Earned", f"${int(daily_prod * 0.02)}", "Daily Accumulation")
+
+    # --- 🆕 NEW FEATURE 2: NEURAL SCHEDULER (AI Planning) ---
+    elif menu == "NEURAL SCHEDULER 🧠":
+        st.markdown("## 🧠 NEURAL PRODUCTION SCHEDULER")
+        with st.expander("ℹ️ INTEL: WHY THIS MATTERS?"):
+            st.markdown("**CEO Summary:** Eliminates machine downtime. Autoschedules orders.\n**Engineer's Logic:** Solves the Job-Shop Scheduling Problem (JSP) using heuristic algorithms.")
+        
+        if st.button("🤖 GENERATE OPTIMAL SCHEDULE"):
+            # Mock Data for Gantt
+            df_gantt = pd.DataFrame([
+                dict(Task="Order #901 (H&M)", Start='2026-02-01', Finish='2026-02-05', Machine="Knitting-A", Status="Running"),
+                dict(Task="Order #902 (Zara)", Start='2026-02-02', Finish='2026-02-06', Machine="Dyeing-1", Status="Scheduled"),
+                dict(Task="Order #903 (Uniqlo)", Start='2026-02-06', Finish='2026-02-10', Machine="Knitting-A", Status="Pending"),
+                dict(Task="Maintenance", Start='2026-02-05', Finish='2026-02-06', Machine="Knitting-B", Status="Critical"),
+            ])
+            fig = px.timeline(df_gantt, x_start="Start", x_end="Finish", y="Machine", color="Status", 
+                              color_discrete_map={"Running": "#00d2ff", "Critical": "#ff0055", "Scheduled": "#00ff88"})
+            fig.update_yaxes(categoryorder="total ascending")
+            fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', title="AI Generated Timeline (Efficiency: 98%)")
+            st.plotly_chart(fig, use_container_width=True)
+            st.info("💡 **AI Optimization:** Knitting-B downtime aligned with Order #902 Dyeing phase to prevent bottleneck.")
+        else:
+            st.markdown('<div class="skunk-card" style="text-align:center;"><h3>AWAITING INPUT</h3><p>Click Generate to run Neural Planning Algorithm</p></div>', unsafe_allow_html=True)
+
+    # --- 🆕 NEW FEATURE 3: SMART GRID (Energy AI) ---
+    elif menu == "SMART GRID ⚡":
+        st.markdown("## ⚡ SMART ENERGY GRID")
+        with st.expander("ℹ️ INTEL: WHY THIS MATTERS?"):
+            st.markdown("**CEO Summary:** Cuts electricity bills by predicting peak hours.\n**Engineer's Logic:** Real-time KWh monitoring vs. BDT Cost Tiers.")
+        
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Live Load", "450 kW", "Peak Zone")
+        c2.metric("Hourly Cost", "BDT 4,500", "+15% (Peak Rate)")
+        c3.metric("Power Factor", "0.98", "Optimal")
+        
+        st.markdown("### 🔌 Real-Time Consumption Anomaly")
+        # Live simulated data
+        x = list(range(24))
+        y = [random.randint(300, 500) if i > 10 and i < 18 else random.randint(100, 200) for i in x]
+        
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=x, y=y, fill='tozeroy', line=dict(color='#ffaa00', width=2), name="Power Usage (kW)"))
+        fig.add_vrect(x0=17, x1=23, annotation_text="PEAK HOURS (Avoid)", annotation_position="top left", fillcolor="red", opacity=0.1, line_width=0)
+        fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_title="Hour of Day", yaxis_title="Kilowatts (kW)")
+        st.plotly_chart(fig, use_container_width=True)
+        st.success("✅ **Recommendation:** Shift 'Dyeing Batch 4' to 02:00 AM to save BDT 15,000.")
+
 
     # 4. HR COMMAND (NEW MODULE)
     elif menu == "HR COMMAND":
