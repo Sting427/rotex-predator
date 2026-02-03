@@ -1,0 +1,16 @@
+streamlit
+opencv-python-headless
+pandas
+numpy
+yfinance
+scikit-learn
+plotly
+feedparser
+requests
+pydeck
+streamlit-lottie
+fpdf
+matplotlib
+scipy
+qrcode
+graphviz
