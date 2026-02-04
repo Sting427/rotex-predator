@@ -167,8 +167,8 @@ st.markdown("""
         box-shadow: 0 0 20px rgba(0, 210, 255, 0.6);
     }
     
-    /* 9. CHAT BUBBLES */
-    .chat-bubble-me {
+    /* 9. CHAT BUBBLES & NOTES */
+    .chat-bubble-me, .note-bubble {
         background: rgba(0, 210, 255, 0.1);
         border: 1px solid #00d2ff;
         border-radius: 15px 15px 0px 15px;
@@ -190,11 +190,15 @@ st.markdown("""
         clear: both;
         max-width: 70%;
     }
+    .note-bubble {
+        text-align: left; float: left; border-radius: 0px 15px 15px 15px; width: 100%; max-width: 100%;
+        border-left: 3px solid #00d2ff;
+    }
     </style>
     """, unsafe_allow_html=True)
 
 # --- 🟢 SYSTEM STATUS MARKER ---
-st.success("SYSTEM STATUS: v37.0 (VAULT DELETE + LINK FIX)")
+st.success("SYSTEM STATUS: v38.0 (NEURAL NEXUS + BLACK BOX ONLINE)")
 
 # --- 🗄️ DATABASE ---
 DB_FILE = "rotex_core.db"
@@ -207,6 +211,8 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS employees (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, role TEXT, salary REAL, status TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS chat_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, user TEXT, message TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS video_library (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, type TEXT, url TEXT, category TEXT)''')
+    # NEW: BLACK BOX NOTES
+    c.execute('''CREATE TABLE IF NOT EXISTS video_notes (id INTEGER PRIMARY KEY AUTOINCREMENT, video_id INTEGER, user TEXT, note TEXT, timestamp TEXT)''')
 
     # --- AUTO-SEED DATA ---
     c.execute("SELECT count(*) FROM employees")
@@ -255,6 +261,12 @@ def db_add_video(title, url, category):
 def db_delete_video(vid_id):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     c.execute("DELETE FROM video_library WHERE id=?", (vid_id,))
+    c.execute("DELETE FROM video_notes WHERE video_id=?", (vid_id,))
+    conn.commit(); conn.close()
+
+def db_add_note(vid_id, note):
+    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+    c.execute("INSERT INTO video_notes (video_id, user, note, timestamp) VALUES (?, ?, ?, ?)", (vid_id, "CEO", note, datetime.now().strftime("%Y-%m-%d %H:%M")))
     conn.commit(); conn.close()
 
 def db_fetch_table(table_name):
@@ -507,67 +519,107 @@ if check_password():
         fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_title="Hour of Day", yaxis_title="Kilowatts (kW)")
         st.plotly_chart(fig, use_container_width=True)
 
-    # --- 🆕 NEW FEATURE: VIDEO VAULT ---
+    # --- 🆕 NEW FEATURE: VIDEO VAULT (NEURAL EDITION) ---
     elif menu == "VIDEO VAULT 🎥":
-        st.markdown("## 🎥 ROTex VIDEO STREAM")
-        with st.expander("ℹ️ INTEL: HYBRID VIDEO ARCHIVE"):
-            st.markdown("**Core Function:** Store proprietary training videos OR stream directly from YouTube.\n**Privacy:** Internal uploads are session-based. YouTube links are persistent.")
-
-        # 1. CONTROLS (Upload vs Link)
-        col_input, col_view = st.columns([1, 2])
-        with col_input:
-            st.markdown("### 📤 UPLOAD CENTER")
-            mode = st.radio("Source Type", ["🔗 YouTube Link", "📂 Local File Upload"])
-            
-            if mode == "🔗 YouTube Link":
-                yt_url = st.text_input("Paste YouTube URL")
-                yt_title = st.text_input("Video Title", "New Training Video")
-                yt_cat = st.selectbox("Category", ["Training", "R&D", "Market", "Safety"])
-                if st.button("SAVE TO ARCHIVE"):
-                    if yt_url:
-                        db_add_video(yt_title, yt_url, yt_cat)
-                        st.success(f"Linked: {yt_title}")
-                    else:
-                        st.warning("URL Required")
-            
-            elif mode == "📂 Local File Upload":
-                st.info("⚠️ Note: Local files are temporary (Session Only) on Cloud.")
-                uploaded_file = st.file_uploader("Choose MP4/MOV", type=["mp4", "mov", "avi"])
-                if uploaded_file is not None:
-                    st.video(uploaded_file)
-                    st.success("Playback Active")
-
-        # 2. THE VIDEO GRID
-        with col_view:
-            st.markdown("### 📺 ARCHIVE LIBRARY")
+        st.markdown("## 🎥 ROTex KNOWLEDGE CORE")
+        
+        tab_nexus, tab_feed = st.tabs(["🕸️ NEURAL NEXUS", "📺 QUANTUM FEED"])
+        
+        # TAB 1: 3D VISUALIZATION
+        with tab_nexus:
+            st.markdown("### 🧠 KNOWLEDGE TOPOLOGY")
             df_vids = db_fetch_table("video_library")
-            
             if not df_vids.empty:
-                for index, row in df_vids.iterrows():
-                    # AUTO-FIX: Convert /live/ links to /watch?v= for Streamlit compatibility
-                    clean_url = row['url'].replace("/live/", "/watch?v=")
-                    
-                    with st.container():
-                        st.markdown(f"""
-                        <div class="video-card">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                                <span style="font-family:'Rajdhani'; font-weight:bold; font-size:18px; color:#00d2ff;">{row['title']}</span>
-                                <span style="background:#333; padding:2px 8px; border-radius:4px; font-size:10px;">{row['category']}</span>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        col_v, col_d = st.columns([5, 1])
-                        with col_v:
-                            st.video(clean_url)
-                        with col_d:
-                            # TACTICAL DELETE BUTTON
-                            if st.button("❌", key=f"del_{row['id']}", help="Remove from Archive"):
-                                db_delete_video(row['id'])
-                                st.rerun()
-                        st.markdown("---")
+                # 3D Node Logic
+                nodes = []
+                for _, row in df_vids.iterrows():
+                    # Generate deterministic random 3D coords based on category to cluster them
+                    seed_val = sum(bytearray(row['category'].encode('utf-8')))
+                    random.seed(seed_val)
+                    x, y, z = random.uniform(-1,1), random.uniform(-1,1), random.uniform(-1,1)
+                    nodes.append({'x': x, 'y': y, 'z': z, 'title': row['title'], 'cat': row['category']})
+                
+                df_nodes = pd.DataFrame(nodes)
+                fig_3d = px.scatter_3d(df_nodes, x='x', y='y', z='z', color='cat', hover_name='title', size_max=20, opacity=0.8)
+                fig_3d.update_layout(template="plotly_dark", height=500, scene=dict(xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False)))
+                st.plotly_chart(fig_3d, use_container_width=True)
+                st.info("Interactive 3D Graph: Nodes represent video assets. Colors indicate Knowledge Clusters.")
             else:
-                st.info("Library Empty. Add a YouTube link to begin.")
+                st.warning("Nexus Offline: Insufficient Data Points.")
+
+        # TAB 2: PLAYER & BLACK BOX
+        with tab_feed:
+            # 1. CONTROLS (Upload vs Link)
+            col_input, col_view = st.columns([1, 2])
+            with col_input:
+                with st.expander("📤 UPLOAD TRANSMITTER", expanded=True):
+                    mode = st.radio("Source", ["🔗 Link", "📂 File"], label_visibility="collapsed")
+                    if mode == "🔗 Link":
+                        yt_url = st.text_input("YouTube URL")
+                        yt_title = st.text_input("Title", "Briefing #001")
+                        yt_cat = st.selectbox("Sector", ["Training", "R&D", "Market", "Security", "General"])
+                        if st.button("ENCRYPT TO VAULT"):
+                            if yt_url:
+                                db_add_video(yt_title, yt_url, yt_cat)
+                                st.success("Asset Secured")
+                    elif mode == "📂 File":
+                        st.info("⚠️ Session Cache Only")
+                        uploaded_file = st.file_uploader("MP4/MOV", type=["mp4", "mov"])
+                        if uploaded_file: st.video(uploaded_file)
+
+                # CINEMA SEARCH
+                st.markdown("### 🔍 SEARCH PROTOCOL")
+                search_q = st.text_input("Filter Assets...", placeholder="Type keyword...")
+
+            # 2. THE VIDEO GRID + BLACK BOX
+            with col_view:
+                df_vids = db_fetch_table("video_library")
+                if search_q:
+                    df_vids = df_vids[df_vids['title'].str.contains(search_q, case=False)]
+
+                if not df_vids.empty:
+                    for index, row in df_vids.iterrows():
+                        clean_url = row['url'].replace("/live/", "/watch?v=")
+                        
+                        with st.container():
+                            # HEADER
+                            st.markdown(f"""
+                            <div class="video-card">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span style="font-family:'Rajdhani'; font-weight:bold; font-size:20px; color:#00d2ff;">{row['title']}</span>
+                                    <span style="border:1px solid #555; padding:2px 8px; border-radius:4px; font-size:10px; color:#888;">{row['category']}</span>
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                            # PLAYER + DELETE
+                            col_v, col_d = st.columns([6, 1])
+                            with col_v: st.video(clean_url)
+                            with col_d: 
+                                if st.button("🗑️", key=f"del_{row['id']}"): 
+                                    db_delete_video(row['id']); st.rerun()
+
+                            # BLACK BOX (NOTES)
+                            with st.expander(f"📝 BLACK BOX LOGS [ID: {row['id']}]"):
+                                n_col1, n_col2 = st.columns([3, 2])
+                                with n_col1:
+                                    note_in = st.text_input("Add Intelligence:", key=f"n_in_{row['id']}")
+                                    if st.button("LOG ENTRY", key=f"n_btn_{row['id']}") and note_in:
+                                        db_add_note(row['id'], note_in)
+                                        st.rerun()
+                                with n_col2:
+                                    # FETCH NOTES
+                                    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+                                    notes_df = pd.read_sql_query(f"SELECT * FROM video_notes WHERE video_id={row['id']} ORDER BY id DESC", conn)
+                                    conn.close()
+                                    if not notes_df.empty:
+                                        for _, n_row in notes_df.iterrows():
+                                            st.markdown(f"<div class='note-bubble'><b>{n_row['user']}</b>: {n_row['note']} <span style='font-size:8px; color:#666'>({n_row['timestamp']})</span></div>", unsafe_allow_html=True)
+                                    else:
+                                        st.caption("No intel logged.")
+                            st.markdown("---")
+                else:
+                    st.info("Archives Empty.")
 
     # LIVE SUPPORT
     elif menu == "LIVE SUPPORT 💬":
