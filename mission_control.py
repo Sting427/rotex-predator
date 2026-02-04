@@ -198,7 +198,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # --- 🟢 SYSTEM STATUS MARKER ---
-st.success("SYSTEM STATUS: v38.0 (NEURAL NEXUS + BLACK BOX ONLINE)")
+st.success("SYSTEM STATUS: v39.0 (SENTIMENT ENGINE: LIKE/DISLIKE ONLINE)")
 
 # --- 🗄️ DATABASE ---
 DB_FILE = "rotex_core.db"
@@ -206,13 +206,23 @@ DB_FILE = "rotex_core.db"
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
+    # CORE TABLES
     c.execute('''CREATE TABLE IF NOT EXISTS deals (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, buyer TEXT, qty REAL, price REAL, cost REAL, margin REAL)''')
     c.execute('''CREATE TABLE IF NOT EXISTS scans (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, defects INTEGER, status TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS employees (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, role TEXT, salary REAL, status TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS chat_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, user TEXT, message TEXT)''')
-    c.execute('''CREATE TABLE IF NOT EXISTS video_library (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, type TEXT, url TEXT, category TEXT)''')
-    # NEW: BLACK BOX NOTES
+    
+    # VIDEO LIBRARY (Updated with RATING column)
+    c.execute('''CREATE TABLE IF NOT EXISTS video_library (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, type TEXT, url TEXT, category TEXT, rating TEXT DEFAULT 'None')''')
+    
+    # VIDEO NOTES
     c.execute('''CREATE TABLE IF NOT EXISTS video_notes (id INTEGER PRIMARY KEY AUTOINCREMENT, video_id INTEGER, user TEXT, note TEXT, timestamp TEXT)''')
+
+    # --- MIGRATION CHECK (Add 'rating' column if it doesn't exist for older v38 users) ---
+    try:
+        c.execute("ALTER TABLE video_library ADD COLUMN rating TEXT DEFAULT 'None'")
+    except sqlite3.OperationalError:
+        pass # Column already exists, all good.
 
     # --- AUTO-SEED DATA ---
     c.execute("SELECT count(*) FROM employees")
@@ -230,10 +240,10 @@ def init_db():
         
         # Seed Videos
         videos = [
-            ("Textile Factory Safety", "youtube", "https://www.youtube.com/watch?v=1p55GjA1jCQ", "Training"),
-            ("Advanced Knitting Tech", "youtube", "https://www.youtube.com/watch?v=F07gB5lH6qE", "R&D"),
+            ("Textile Factory Safety", "youtube", "https://www.youtube.com/watch?v=1p55GjA1jCQ", "Training", "None"),
+            ("Advanced Knitting Tech", "youtube", "https://www.youtube.com/watch?v=F07gB5lH6qE", "R&D", "None"),
         ]
-        c.executemany("INSERT INTO video_library (title, type, url, category) VALUES (?, ?, ?, ?)", videos)
+        c.executemany("INSERT INTO video_library (title, type, url, category, rating) VALUES (?, ?, ?, ?, ?)", videos)
         
         conn.commit()
     conn.commit(); conn.close()
@@ -255,7 +265,7 @@ def db_post_chat(user, message):
 
 def db_add_video(title, url, category):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
-    c.execute("INSERT INTO video_library (title, type, url, category) VALUES (?, ?, ?, ?)", (title, "youtube", url, category))
+    c.execute("INSERT INTO video_library (title, type, url, category, rating) VALUES (?, ?, ?, ?, 'None')", (title, "youtube", url, category))
     conn.commit(); conn.close()
 
 def db_delete_video(vid_id):
@@ -267,6 +277,12 @@ def db_delete_video(vid_id):
 def db_add_note(vid_id, note):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     c.execute("INSERT INTO video_notes (video_id, user, note, timestamp) VALUES (?, ?, ?, ?)", (vid_id, "CEO", note, datetime.now().strftime("%Y-%m-%d %H:%M")))
+    conn.commit(); conn.close()
+
+# NEW: RATE VIDEO
+def db_rate_video(vid_id, rating):
+    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+    c.execute("UPDATE video_library SET rating=? WHERE id=?", (rating, vid_id))
     conn.commit(); conn.close()
 
 def db_fetch_table(table_name):
@@ -571,7 +587,7 @@ if check_password():
                 st.markdown("### 🔍 SEARCH PROTOCOL")
                 search_q = st.text_input("Filter Assets...", placeholder="Type keyword...")
 
-            # 2. THE VIDEO GRID + BLACK BOX
+            # 2. THE VIDEO GRID + BLACK BOX + SENTIMENT
             with col_view:
                 df_vids = db_fetch_table("video_library")
                 if search_q:
@@ -582,20 +598,32 @@ if check_password():
                         clean_url = row['url'].replace("/live/", "/watch?v=")
                         
                         with st.container():
-                            # HEADER
+                            # HEADER & RATING BADGE
+                            rating_badge = "⚪" # Default
+                            if row['rating'] == 'Like': rating_badge = "👍"
+                            elif row['rating'] == 'Dislike': rating_badge = "👎"
+
                             st.markdown(f"""
                             <div class="video-card">
                                 <div style="display:flex; justify-content:space-between; align-items:center;">
                                     <span style="font-family:'Rajdhani'; font-weight:bold; font-size:20px; color:#00d2ff;">{row['title']}</span>
-                                    <span style="border:1px solid #555; padding:2px 8px; border-radius:4px; font-size:10px; color:#888;">{row['category']}</span>
+                                    <div>
+                                        <span style="border:1px solid #555; padding:2px 8px; border-radius:4px; font-size:10px; color:#888; margin-right:5px;">{row['category']}</span>
+                                        <span style="font-size:14px;">{rating_badge}</span>
+                                    </div>
                                 </div>
                             </div>
                             """, unsafe_allow_html=True)
                             
-                            # PLAYER + DELETE
-                            col_v, col_d = st.columns([6, 1])
+                            # PLAYER + CONTROLS
+                            col_v, col_c = st.columns([6, 1])
                             with col_v: st.video(clean_url)
-                            with col_d: 
+                            with col_c: 
+                                # CONTROL PANEL
+                                if st.button("👍", key=f"like_{row['id']}"): 
+                                    db_rate_video(row['id'], "Like"); st.rerun()
+                                if st.button("👎", key=f"dis_{row['id']}"): 
+                                    db_rate_video(row['id'], "Dislike"); st.rerun()
                                 if st.button("🗑️", key=f"del_{row['id']}"): 
                                     db_delete_video(row['id']); st.rerun()
 
