@@ -34,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 🎨 THE "CYBER-TILE" UI ENGINE (v35.0 STRICT RESTORATION) ---
+# --- 🎨 THE "CYBER-TILE" UI ENGINE (v35.0 PRESERVED) ---
 st.markdown("""
     <style>
     /* 1. IMPORT FUTURISTIC FONTS */
@@ -59,7 +59,7 @@ st.markdown("""
         100% { background-position: 0% 50%; }
     }
 
-    /* 3. GLASSMORPHISM CARDS (Added .video-card support) */
+    /* 3. GLASSMORPHISM CARDS */
     div[data-testid="metric-container"], .info-card, .job-card, .skunk-card, .target-card, .target-safe, .guide-card, .stDataFrame, .stPlotlyChart, .video-card {
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(16px);
@@ -194,7 +194,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # --- 🟢 SYSTEM STATUS MARKER ---
-st.success("SYSTEM STATUS: v36.0 (VIDEO VAULT + CYBER TILES RESTORED)")
+st.success("SYSTEM STATUS: v37.0 (VAULT DELETE + LINK FIX)")
 
 # --- 🗄️ DATABASE ---
 DB_FILE = "rotex_core.db"
@@ -206,8 +206,6 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS scans (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, defects INTEGER, status TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS employees (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, role TEXT, salary REAL, status TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS chat_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, user TEXT, message TEXT)''')
-    
-    # NEW VIDEO TABLE
     c.execute('''CREATE TABLE IF NOT EXISTS video_library (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, type TEXT, url TEXT, category TEXT)''')
 
     # --- AUTO-SEED DATA ---
@@ -252,6 +250,11 @@ def db_post_chat(user, message):
 def db_add_video(title, url, category):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     c.execute("INSERT INTO video_library (title, type, url, category) VALUES (?, ?, ?, ?)", (title, "youtube", url, category))
+    conn.commit(); conn.close()
+
+def db_delete_video(vid_id):
+    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+    c.execute("DELETE FROM video_library WHERE id=?", (vid_id,))
     conn.commit(); conn.close()
 
 def db_fetch_table(table_name):
@@ -350,7 +353,7 @@ if check_password():
     with st.sidebar:
         st.markdown('<div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">System Online</div></div>', unsafe_allow_html=True)
         
-        # ELITE MENU with Video Vault inserted carefully
+        # ELITE MENU
         menu = st.radio("MAIN MENU", [
             "MARKET INTELLIGENCE", "COMPETITOR PRICING", "CHAOS THEORY", 
             "ESG PULSE 🌿", "NEURAL SCHEDULER 🧠", "SMART GRID ⚡", 
@@ -540,8 +543,10 @@ if check_password():
             df_vids = db_fetch_table("video_library")
             
             if not df_vids.empty:
-                # Custom CSS Grid for Videos
                 for index, row in df_vids.iterrows():
+                    # AUTO-FIX: Convert /live/ links to /watch?v= for Streamlit compatibility
+                    clean_url = row['url'].replace("/live/", "/watch?v=")
+                    
                     with st.container():
                         st.markdown(f"""
                         <div class="video-card">
@@ -551,7 +556,15 @@ if check_password():
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
-                        st.video(row['url'])
+                        
+                        col_v, col_d = st.columns([5, 1])
+                        with col_v:
+                            st.video(clean_url)
+                        with col_d:
+                            # TACTICAL DELETE BUTTON
+                            if st.button("❌", key=f"del_{row['id']}", help="Remove from Archive"):
+                                db_delete_video(row['id'])
+                                st.rerun()
                         st.markdown("---")
             else:
                 st.info("Library Empty. Add a YouTube link to begin.")
