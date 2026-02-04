@@ -34,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 🎨 THE "CYBER-TILE" UI ENGINE (v35.0 UPDATE) ---
+# --- 🎨 THE "CYBER-TILE" UI ENGINE (v35.0 STRICT RESTORATION) ---
 st.markdown("""
     <style>
     /* 1. IMPORT FUTURISTIC FONTS */
@@ -59,8 +59,8 @@ st.markdown("""
         100% { background-position: 0% 50%; }
     }
 
-    /* 3. GLASSMORPHISM CARDS */
-    div[data-testid="metric-container"], .info-card, .job-card, .skunk-card, .target-card, .target-safe, .guide-card, .stDataFrame, .stPlotlyChart {
+    /* 3. GLASSMORPHISM CARDS (Added .video-card support) */
+    div[data-testid="metric-container"], .info-card, .job-card, .skunk-card, .target-card, .target-safe, .guide-card, .stDataFrame, .stPlotlyChart, .video-card {
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
@@ -71,7 +71,7 @@ st.markdown("""
         transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
     }
 
-    div[data-testid="metric-container"]:hover, .info-card:hover, .guide-card:hover {
+    div[data-testid="metric-container"]:hover, .info-card:hover, .guide-card:hover, .video-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 10px 40px rgba(0, 210, 255, 0.2);
         border-color: rgba(0, 210, 255, 0.5);
@@ -88,38 +88,34 @@ st.markdown("""
         text-shadow: 0px 0px 20px rgba(0, 210, 255, 0.3);
     }
 
-    /* 5. SIDEBAR & MENU OPTIMIZATION (THE FIX) */
+    /* 5. SIDEBAR & MENU OPTIMIZATION (CYBER-TILES RESTORED) */
     section[data-testid="stSidebar"] {
         background: rgba(0, 0, 0, 0.6);
         backdrop-filter: blur(20px);
         border-right: 1px solid rgba(255, 255, 255, 0.1);
     }
     
-    /* --- MENU TILES TRANSFORMATION --- */
-    /* Target the labels inside the radio button group in the sidebar */
+    /* MENU TILES TRANSFORMATION */
     section[data-testid="stSidebar"] div.stRadio > div[role="radiogroup"] > label {
-        background: rgba(255, 255, 255, 0.03); /* Subtle glass background */
-        padding: 12px 15px; /* Add internal breathing room */
-        margin-bottom: 8px; /* Add vertical spacing between items */
-        border-radius: 8px; /* Rounded corners */
-        border: 1px solid rgba(255, 255, 255, 0.05); /* Faint border */
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth physics */
-        display: flex; /* Ensure layout alignment */
+        background: rgba(255, 255, 255, 0.03);
+        padding: 12px 15px;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
         align-items: center;
     }
 
     /* Hover State for Menu Tiles */
     section[data-testid="stSidebar"] div.stRadio > div[role="radiogroup"] > label:hover {
-        background: rgba(0, 210, 255, 0.1); /* Cyan tint on hover */
-        border-color: rgba(0, 210, 255, 0.5); /* Glowing border */
-        padding-left: 25px; /* Slide animation to the right */
+        background: rgba(0, 210, 255, 0.1);
+        border-color: rgba(0, 210, 255, 0.5);
+        padding-left: 25px; /* Slide animation */
         color: #ffffff !important;
         cursor: pointer;
         box-shadow: 0 0 15px rgba(0, 210, 255, 0.1);
     }
-    
-    /* Selected State (Streamlit doesn't expose a clean selected class for labels easily via CSS, 
-       but the hover effect creates the premium feel we need). */
 
     /* 6. LOGO ANIMATION */
     .rotex-text {
@@ -198,9 +194,9 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # --- 🟢 SYSTEM STATUS MARKER ---
-st.success("SYSTEM STATUS: v35.0 (MENU AESTHETICS UPGRADE)")
+st.success("SYSTEM STATUS: v36.0 (VIDEO VAULT + CYBER TILES RESTORED)")
 
-# --- 🗄️ DATABASE & AUTO-SEEDING ---
+# --- 🗄️ DATABASE ---
 DB_FILE = "rotex_core.db"
 
 def init_db():
@@ -211,7 +207,10 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS employees (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, role TEXT, salary REAL, status TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS chat_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, user TEXT, message TEXT)''')
     
-    # --- AUTO-SEED FAKE DATA IF EMPTY ---
+    # NEW VIDEO TABLE
+    c.execute('''CREATE TABLE IF NOT EXISTS video_library (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, type TEXT, url TEXT, category TEXT)''')
+
+    # --- AUTO-SEED DATA ---
     c.execute("SELECT count(*) FROM employees")
     if c.fetchone()[0] == 0:
         fake_employees = [
@@ -219,22 +218,20 @@ def init_db():
             ("Fatima Begum", "Sewing Operator", 13000, "Active"),
             ("Kamrul Hasan", "Shift Supervisor", 28000, "Active"),
             ("Suma Akter", "Quality Inspector", 18500, "Active"),
-            ("Rafiqul Islam", "Maintenance Eng.", 45000, "Active"),
-            ("Nusrat Jahan", "Merchandiser", 55000, "Active"),
-            ("David Rozario", "Floor Manager", 85000, "Active"),
-            ("Salma Khatun", "Helper", 9500, "Active"),
-            ("Mohammad Ali", "Dyeing Master", 62000, "Active"),
-            ("Rubel Hossain", "Loader", 10000, "Active"),
-            ("Tania Sultana", "CAD Designer", 42000, "Active"),
-            ("Jashim Uddin", "Security Guard", 11000, "Active"),
         ]
-        # Multiply to make it look big (3x Loop)
-        for _ in range(3): 
+        for _ in range(5): 
             for emp in fake_employees:
                 c.execute("INSERT INTO employees (name, role, salary, status) VALUES (?, ?, ?, ?)", 
                           (emp[0] + f" {random.randint(1,99)}", emp[1], emp[2] + random.randint(-500, 500), emp[3]))
+        
+        # Seed Videos
+        videos = [
+            ("Textile Factory Safety", "youtube", "https://www.youtube.com/watch?v=1p55GjA1jCQ", "Training"),
+            ("Advanced Knitting Tech", "youtube", "https://www.youtube.com/watch?v=F07gB5lH6qE", "R&D"),
+        ]
+        c.executemany("INSERT INTO video_library (title, type, url, category) VALUES (?, ?, ?, ?)", videos)
+        
         conn.commit()
-    
     conn.commit(); conn.close()
 
 def db_log_deal(buyer, qty, price, cost, margin):
@@ -250,6 +247,11 @@ def db_add_employee(name, role, salary):
 def db_post_chat(user, message):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     c.execute("INSERT INTO chat_logs (timestamp, user, message) VALUES (?, ?, ?)", (datetime.now().strftime("%H:%M"), user, message))
+    conn.commit(); conn.close()
+
+def db_add_video(title, url, category):
+    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+    c.execute("INSERT INTO video_library (title, type, url, category) VALUES (?, ?, ?, ?)", (title, "youtube", url, category))
     conn.commit(); conn.close()
 
 def db_fetch_table(table_name):
@@ -272,55 +274,29 @@ def check_password():
         return False
     return st.session_state["password_correct"]
 
-# --- 🧠 LOGIC & UTILS (BULLETPROOF FAIL-SAFE MARKET DATA) ---
+# --- 🧠 LOGIC & UTILS ---
 @st.cache_data(ttl=3600)
 def load_market_data():
-    # 1. PREPARE FALLBACK DATA FIRST (Guarantees no crash)
     dates = pd.date_range(end=pd.Timestamp.today(), periods=100)
     df_safe = pd.DataFrame(index=dates)
     df_safe['Cotton_USD'] = np.random.normal(85, 2, 100)
     df_safe['Gas_USD'] = np.random.normal(3.0, 0.1, 100)
     df_safe['Yarn_Fair_Value'] = ((df_safe['Cotton_USD']/100) * 1.6) + (df_safe['Gas_USD'] * 0.15) + 0.40
-
     try:
-        # 2. ATTEMPT REAL DOWNLOAD
         data = yf.download(['CT=F', 'NG=F'], period="1y", interval="1d", progress=False)
-        
-        # 3. IF DATA IS EMPTY, RETURN SAFE IMMEDIATELY
-        if data is None or data.empty:
-            return df_safe
-            
-        # 4. HANDLE MULTI-INDEX (The most common Yahoo bug)
+        if data is None or data.empty: return df_safe
         if isinstance(data.columns, pd.MultiIndex):
-            # Try to flatten or select 'Close'
-            if 'Close' in data.columns.get_level_values(0):
-                data = data.xs('Close', level=0, axis=1)
-            else:
-                return df_safe
-
-        # 5. HANDLE 'Close' COLUMN
-        if 'Close' in data:
-            data = data['Close']
-
-        # 6. DOUBLE CHECK EMPTY AGAIN
-        if data.empty:
-            return df_safe
-
-        # 7. RENAME AND CALCULATE
+            if 'Close' in data.columns.get_level_values(0): data = data.xs('Close', level=0, axis=1)
+            else: return df_safe
+        if 'Close' in data: data = data['Close']
+        if data.empty: return df_safe
         data.columns = ['Cotton_USD', 'Gas_USD']
         data['Yarn_Fair_Value'] = ((data['Cotton_USD']/100) * 1.6) + (data['Gas_USD'] * 0.15) + 0.40
         return data.dropna()
-
-    except Exception:
-        # 8. IF ANYTHING CRASHES, RETURN SAFE DATA
-        return df_safe
+    except Exception: return df_safe
 
 def get_news_stealth():
     try: return feedparser.parse(requests.get("https://news.google.com/rss/search?q=Bangladesh+Textile+Industry+when:3d&hl=en-BD&gl=BD&ceid=BD:en").content).entries[:4]
-    except: return []
-
-def get_jobs_stealth():
-    try: return feedparser.parse(requests.get("https://news.google.com/rss/search?q=Textile+Job+Vacancy+Bangladesh+when:7d&hl=en-BD&gl=BD&ceid=BD:en").content).entries[:8]
     except: return []
 
 def process_fabric_image(image_file):
@@ -359,13 +335,6 @@ def create_pdf_report(yarn, cotton, gas, news, df_hist):
         pdf.multi_cell(0, 10, f"- {safe_title}")
     return pdf.output(dest='S').encode('latin-1')
 
-def generate_qr(data):
-    qr = qrcode.QRCode(version=1, box_size=10, border=5)
-    qr.add_data(data)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white")
-    return img
-
 def generate_noise_pattern(freq, chaos):
     w, h = 300, 300
     x = np.linspace(0, freq, w)
@@ -381,11 +350,11 @@ if check_password():
     with st.sidebar:
         st.markdown('<div class="rotex-logo-container"><div class="rotex-text">ROTex</div><div class="rotex-tagline">System Online</div></div>', unsafe_allow_html=True)
         
-        # --- UPDATE MENU WITH NEW FEATURES ---
+        # ELITE MENU with Video Vault inserted carefully
         menu = st.radio("MAIN MENU", [
             "MARKET INTELLIGENCE", "COMPETITOR PRICING", "CHAOS THEORY", 
             "ESG PULSE 🌿", "NEURAL SCHEDULER 🧠", "SMART GRID ⚡", 
-            "LIVE SUPPORT 💬", 
+            "VIDEO VAULT 🎥", "LIVE SUPPORT 💬", 
             "HR COMMAND", "R&D INNOVATION", "QUALITY LAB", 
             "FACTORY STATUS", "FABRIC SCANNER", "LOGISTICS", "COSTING", 
             "DATABASE", "SYSTEM GUIDE"
@@ -394,18 +363,12 @@ if check_password():
         if st.button("LOGOUT"): st.session_state["password_correct"] = False; st.rerun()
 
     df = load_market_data()
-    # SAFE INDEXING (Prevents Crash)
-    if not df.empty:
-        yarn_cost = df['Yarn_Fair_Value'].iloc[-1]
-    else:
-        yarn_cost = 4.50 # Ultimate fallback
+    if not df.empty: yarn_cost = df['Yarn_Fair_Value'].iloc[-1]
+    else: yarn_cost = 4.50
 
     # 1. MARKET INTELLIGENCE
     if menu == "MARKET INTELLIGENCE":
         st.markdown("## 📡 MARKET INTELLIGENCE")
-        with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** Wall Street for Textiles.\n**Engineer's Logic:** Live data scraping from NYMEX/Henry Hub.")
-        
         st.markdown(f"<div style='background:rgba(0,0,0,0.5); padding:10px; border-radius:5px; white-space:nowrap; overflow:hidden; color:#00ff88; font-family:monospace;'>LIVE FEED: COTTON: ${df['Cotton_USD'].iloc[-1]:.2f} ▲ | GAS: ${df['Gas_USD'].iloc[-1]:.2f} ▼ | YARN FAIR VALUE: ${yarn_cost:.2f} ▲</div>", unsafe_allow_html=True)
         st.write("")
         news_items = get_news_stealth()
@@ -428,11 +391,10 @@ if check_password():
         col_map, col_intel = st.columns([2, 1])
         with col_map:
             st.markdown("### 🗺️ Geopolitical Risk Tracker")
-            map_data = pd.DataFrame({'lat': [23.8, 31.2, 21.0, 39.9, 25.2], 'lon': [90.4, 121.4, 105.8, 116.4, 55.3], 'name': ["DHAKA (Labor Unrest)", "SHANGHAI (Port Congestion)", "HANOI (Logistics)", "BEIJING (Policy)", "DUBAI (Transit)"], 'risk': [10, 50, 30, 80, 20], 'color': [[0, 255, 136], [255, 0, 0], [255, 165, 0], [255, 0, 0], [0, 100, 255]]})
+            map_data = pd.DataFrame({'lat': [23.8, 31.2, 21.0, 39.9, 25.2], 'lon': [90.4, 121.4, 105.8, 116.4, 55.3], 'name': ["DHAKA", "SHANGHAI", "HANOI", "BEIJING", "DUBAI"], 'risk': [10, 50, 30, 80, 20], 'color': [[0, 255, 136], [255, 0, 0], [255, 165, 0], [255, 0, 0], [0, 100, 255]]})
             layer = pdk.Layer("ScatterplotLayer", data=map_data, get_position='[lon, lat]', get_fill_color='color', get_radius=200000, pickable=True)
             view_state = pdk.ViewState(latitude=25, longitude=90, zoom=2, pitch=45)
             st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state, map_style="mapbox://styles/mapbox/dark-v10", tooltip={"text": "{name}\nRisk Level: {risk}%"}))
-            st.info("**Strategic Insight:** Red zones indicate high supply chain risk.")
         with col_intel:
             st.markdown("### 🧠 Global Feed")
             for item in news_items: st.markdown(f'<div class="info-card" style="font-size:12px; padding:10px;"><a href="{item.link}" target="_blank" style="color:#00d2ff; text-decoration:none;">➤ {item.title[:60]}...</a></div>', unsafe_allow_html=True)
@@ -440,17 +402,12 @@ if check_password():
     # 2. COMPETITOR PRICING
     elif menu == "COMPETITOR PRICING":
         st.markdown("## ⚔️ COMPETITOR PRICING SIMULATOR")
-        with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** Predicts rival quotes from China/Vietnam.\n**Engineer's Logic:** Applies geopolitical subsidies to base yarn cost.")
         col_ctrl, col_sim = st.columns([1, 2])
         with col_ctrl:
             st.markdown("### 🎛️ Controls")
             fabric = st.selectbox("Fabric Class", ["Cotton Single Jersey", "CVC Fleece", "Poly Mesh"])
             my_quote = st.number_input("Your Quote ($/kg)", 4.50)
             shock = st.slider("Global Price Shock (%)", -20, 20, 0)
-            with st.expander("❓ LOGIC BLUEPRINT"):
-                if graphviz_installed: st.graphviz_chart('digraph logic { rankdir=TD; node [shape=box, style=filled, fillcolor="#222", fontcolor="white"]; LiveIndex -> BasePrice; BasePrice -> ChinaSubsidy; BasePrice -> IndiaSubsidy; ChinaSubsidy -> FinalPrice; }')
-                else: st.warning("Diagram unavailable")
         with col_sim:
             base = yarn_cost * (1 + shock/100)
             china = base * 0.94; india = base * 0.96; vietnam = base * 0.98
@@ -463,13 +420,10 @@ if check_password():
             c1.metric("🇨🇳 China", f"${china:.2f}")
             c2.metric("🇮🇳 India", f"${india:.2f}")
             c3.metric("🇻🇳 Vietnam", f"${vietnam:.2f}")
-            st.success(f"**AI Analysis:** You have a {prob}% chance of winning this deal.")
 
     # 3. CHAOS THEORY
     elif menu == "CHAOS THEORY":
         st.markdown("## ☣️ DOOMSDAY SIMULATOR")
-        with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** Supply chain stress-tester.\n**Engineer's Logic:** Simulates node failure in the logistics graph.")
         col_doom1, col_doom2 = st.columns([1, 3])
         with col_doom1:
             st.markdown("### 🌪️ SELECT DISASTER")
@@ -494,28 +448,19 @@ if check_password():
             c1, c2, c3 = st.columns(3)
             c1.metric("Financial Impact", f"-${impact_cost:,}", delta_color="inverse")
             c2.metric("Days to Shutdown", f"{days_left} Days", delta_color="inverse" if days_left < 15 else "normal")
-            c3.metric("Risk Level", "CRITICAL" if days_left < 15 else "LOW")
 
-    # --- 🆕 NEW FEATURE 1: ESG PULSE (Carbon Pulse) ---
+    # ESG PULSE
     elif menu == "ESG PULSE 🌿":
         st.markdown("## 🌿 ESG CARBON COMMAND")
-        with st.expander("ℹ️ INTEL: WHY THIS MATTERS?"):
-            st.markdown("**CEO Summary:** Your passport to European export markets (H&M, Inditex requirements).\n**Engineer's Logic:** Calculates Carbon Footprint based on energy mix and logistic distance.")
-        
         col_esg1, col_esg2 = st.columns([1, 2])
         with col_esg1:
             st.markdown("### 🏭 Production Input")
             daily_prod = st.slider("Daily Production (kg)", 1000, 20000, 5000)
             energy_mix = st.radio("Energy Source", ["National Grid (Heavy Gas)", "Solar Hybrid (30%)", "Coal (Legacy)"])
-            
-            # Logic
             co2_factor = 0.6 if energy_mix == "Solar Hybrid (30%)" else (0.9 if "Grid" in energy_mix else 1.2)
             total_co2 = daily_prod * co2_factor
-            
-            st.markdown("### 📊 Compliance Status")
             if co2_factor < 0.8: st.success("✅ EU EXPORT READY")
             else: st.warning("⚠️ SURCHARGE RISK (CBAM)")
-            
         with col_esg2:
             st.markdown("### 💨 Real-Time Emissions Tracker")
             dates = pd.date_range(end=datetime.today(), periods=30)
@@ -524,19 +469,11 @@ if check_password():
             fig.add_hline(y=4.0, line_dash="dot", line_color="red", annotation_text="EU Limit")
             fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
             st.plotly_chart(fig, use_container_width=True)
-            
-            c1, c2 = st.columns(2)
-            c1.metric("Carbon Intensity", f"{co2_factor} kgCO2/kg", "-12%" if "Solar" in energy_mix else "+5%")
-            c2.metric("Credits Earned", f"${int(daily_prod * 0.02)}", "Daily Accumulation")
 
-    # --- 🆕 NEW FEATURE 2: NEURAL SCHEDULER (AI Planning) ---
+    # NEURAL SCHEDULER
     elif menu == "NEURAL SCHEDULER 🧠":
         st.markdown("## 🧠 NEURAL PRODUCTION SCHEDULER")
-        with st.expander("ℹ️ INTEL: WHY THIS MATTERS?"):
-            st.markdown("**CEO Summary:** Eliminates machine downtime. Autoschedules orders.\n**Engineer's Logic:** Solves the Job-Shop Scheduling Problem (JSP) using heuristic algorithms.")
-        
         if st.button("🤖 GENERATE OPTIMAL SCHEDULE"):
-            # Mock Data for Gantt
             df_gantt = pd.DataFrame([
                 dict(Task="Order #901 (H&M)", Start='2026-02-01', Finish='2026-02-05', Machine="Knitting-A", Status="Running"),
                 dict(Task="Order #902 (Zara)", Start='2026-02-02', Finish='2026-02-06', Machine="Dyeing-1", Status="Scheduled"),
@@ -548,70 +485,97 @@ if check_password():
             fig.update_yaxes(categoryorder="total ascending")
             fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', title="AI Generated Timeline (Efficiency: 98%)")
             st.plotly_chart(fig, use_container_width=True)
-            st.info("💡 **AI Optimization:** Knitting-B downtime aligned with Order #902 Dyeing phase to prevent bottleneck.")
         else:
             st.markdown('<div class="skunk-card" style="text-align:center;"><h3>AWAITING INPUT</h3><p>Click Generate to run Neural Planning Algorithm</p></div>', unsafe_allow_html=True)
 
-    # --- 🆕 NEW FEATURE 3: SMART GRID (Energy AI) ---
+    # SMART GRID
     elif menu == "SMART GRID ⚡":
         st.markdown("## ⚡ SMART ENERGY GRID")
-        with st.expander("ℹ️ INTEL: WHY THIS MATTERS?"):
-            st.markdown("**CEO Summary:** Cuts electricity bills by predicting peak hours.\n**Engineer's Logic:** Real-time KWh monitoring vs. BDT Cost Tiers.")
-        
         c1, c2, c3 = st.columns(3)
         c1.metric("Live Load", "450 kW", "Peak Zone")
         c2.metric("Hourly Cost", "BDT 4,500", "+15% (Peak Rate)")
         c3.metric("Power Factor", "0.98", "Optimal")
         
-        st.markdown("### 🔌 Real-Time Consumption Anomaly")
-        # Live simulated data
         x = list(range(24))
         y = [random.randint(300, 500) if i > 10 and i < 18 else random.randint(100, 200) for i in x]
-        
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=x, y=y, fill='tozeroy', line=dict(color='#ffaa00', width=2), name="Power Usage (kW)"))
         fig.add_vrect(x0=17, x1=23, annotation_text="PEAK HOURS (Avoid)", annotation_position="top left", fillcolor="red", opacity=0.1, line_width=0)
         fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_title="Hour of Day", yaxis_title="Kilowatts (kW)")
         st.plotly_chart(fig, use_container_width=True)
-        st.success("✅ **Recommendation:** Shift 'Dyeing Batch 4' to 02:00 AM to save BDT 15,000.")
 
-    # --- 🆕 NEW FEATURE 4: LIVE SUPPORT (Tactical Comms) ---
+    # --- 🆕 NEW FEATURE: VIDEO VAULT ---
+    elif menu == "VIDEO VAULT 🎥":
+        st.markdown("## 🎥 ROTex VIDEO STREAM")
+        with st.expander("ℹ️ INTEL: HYBRID VIDEO ARCHIVE"):
+            st.markdown("**Core Function:** Store proprietary training videos OR stream directly from YouTube.\n**Privacy:** Internal uploads are session-based. YouTube links are persistent.")
+
+        # 1. CONTROLS (Upload vs Link)
+        col_input, col_view = st.columns([1, 2])
+        with col_input:
+            st.markdown("### 📤 UPLOAD CENTER")
+            mode = st.radio("Source Type", ["🔗 YouTube Link", "📂 Local File Upload"])
+            
+            if mode == "🔗 YouTube Link":
+                yt_url = st.text_input("Paste YouTube URL")
+                yt_title = st.text_input("Video Title", "New Training Video")
+                yt_cat = st.selectbox("Category", ["Training", "R&D", "Market", "Safety"])
+                if st.button("SAVE TO ARCHIVE"):
+                    if yt_url:
+                        db_add_video(yt_title, yt_url, yt_cat)
+                        st.success(f"Linked: {yt_title}")
+                    else:
+                        st.warning("URL Required")
+            
+            elif mode == "📂 Local File Upload":
+                st.info("⚠️ Note: Local files are temporary (Session Only) on Cloud.")
+                uploaded_file = st.file_uploader("Choose MP4/MOV", type=["mp4", "mov", "avi"])
+                if uploaded_file is not None:
+                    st.video(uploaded_file)
+                    st.success("Playback Active")
+
+        # 2. THE VIDEO GRID
+        with col_view:
+            st.markdown("### 📺 ARCHIVE LIBRARY")
+            df_vids = db_fetch_table("video_library")
+            
+            if not df_vids.empty:
+                # Custom CSS Grid for Videos
+                for index, row in df_vids.iterrows():
+                    with st.container():
+                        st.markdown(f"""
+                        <div class="video-card">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                <span style="font-family:'Rajdhani'; font-weight:bold; font-size:18px; color:#00d2ff;">{row['title']}</span>
+                                <span style="background:#333; padding:2px 8px; border-radius:4px; font-size:10px;">{row['category']}</span>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        st.video(row['url'])
+                        st.markdown("---")
+            else:
+                st.info("Library Empty. Add a YouTube link to begin.")
+
+    # LIVE SUPPORT
     elif menu == "LIVE SUPPORT 💬":
         st.markdown("## 💬 TACTICAL COMMS")
-        with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** WhatsApp for your Factory Floor.\n**Engineer's Logic:** Real-time persistence chat via SQLite.")
-
-        # Chat container
         chat_container = st.container()
-        
-        # User input
         with st.form("chat_form", clear_on_submit=True):
-            user_msg = st.text_input("Enter Message (Protocol 9):", placeholder="Report issue or status...")
-            submitted = st.form_submit_button("SEND TRANSMISSION")
-            if submitted and user_msg:
-                db_post_chat("CEO (You)", user_msg)
-        
-        # Display Logic
+            user_msg = st.text_input("Enter Message:", placeholder="Report status...")
+            submitted = st.form_submit_button("SEND")
+            if submitted and user_msg: db_post_chat("CEO (You)", user_msg)
         with chat_container:
             df_chat = db_fetch_table("chat_logs")
             if not df_chat.empty:
-                # Reverse to show newest at bottom if we were scrolling, but Streamlit renders top-down. 
-                # We show last 10 messages.
                 for index, row in df_chat.head(10).iterrows():
                     if row['user'] == "CEO (You)":
                         st.markdown(f"<div class='chat-bubble-me'><b>{row['user']}</b> [{row['timestamp']}]<br>{row['message']}</div>", unsafe_allow_html=True)
                     else:
                         st.markdown(f"<div class='chat-bubble-other'><b>{row['user']}</b> [{row['timestamp']}]<br>{row['message']}</div>", unsafe_allow_html=True)
-            else:
-                st.info("No active transmissions. Channel clear.")
 
-
-    # 4. HR COMMAND (NEW MODULE)
+    # HR COMMAND
     elif menu == "HR COMMAND":
         st.markdown("## 👥 HUMAN RESOURCES COMMAND")
-        with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** Manage your 5,000+ workforce.\n**Engineer's Logic:** CRUD database for employee records + Payroll Engine.")
-        
         hr_tabs = st.tabs(["📋 Staff Directory", "💰 Payroll Engine", "⏱️ Attendance Log"])
         with hr_tabs[0]:
             c1, c2 = st.columns([1, 2])
@@ -626,21 +590,18 @@ if check_password():
                 st.dataframe(db_fetch_table("employees"), use_container_width=True)
         with hr_tabs[1]:
             st.markdown("### 💸 Batch Payroll Processor")
-            st.info("System automatically applies 5% Tax deduction for salaries > 20k.")
             if st.button("RUN MONTHLY PAYROLL"):
                 progress = st.progress(0)
                 for i in range(100): time.sleep(0.01); progress.progress(i+1)
-                st.success("✅ Payroll Generated for Active Employees. Total Disbursed: BDT 4,250,000")
+                st.success("✅ Payroll Generated")
         with hr_tabs[2]:
             st.markdown("### ⏱️ Live Attendance")
             att_data = pd.DataFrame({"Employee": ["Rahim", "Karim", "Fatima", "Suma"], "Time In": ["08:01 AM", "08:05 AM", "07:55 AM", "08:10 AM"], "Status": ["On Time", "On Time", "Early", "Late"]})
             st.table(att_data)
 
-    # 5. R&D INNOVATION
+    # R&D INNOVATION
     elif menu == "R&D INNOVATION":
         st.markdown("## 🔬 R&D INNOVATION LAB")
-        with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** Advanced diagnostic tools.\n**Engineer's Logic:** FFT Audio Analysis & Procedural Pattern Generation.")
         tab1, tab2, tab3 = st.tabs(["🔊 Loom Whisperer", "🧬 Algo-Weaver", "⛓️ Digital Passport"])
         with tab1:
             if st.button("SCAN FREQUENCIES"):
@@ -648,28 +609,21 @@ if check_password():
                 fig = go.Figure(data=[go.Surface(z=Z, colorscale='Viridis')])
                 fig.update_layout(autosize=False, width=500, height=500, margin=dict(l=0, r=0, b=0, t=0), paper_bgcolor='rgba(0,0,0,0)')
                 st.plotly_chart(fig, use_container_width=True)
-                st.success("**Diagnostic Complete:** Motor harmonic signatures within ISO 10816.")
         with tab2:
             c1, c2 = st.columns(2); freq = c1.slider("Pattern Frequency", 1, 20, 10); chaos = c2.slider("Chaos Factor", 1, 10, 5)
             if st.button("GENERATE"):
                 st.image(generate_noise_pattern(freq, chaos), use_column_width=True, channels="BGR")
-                st.success("Unique Pattern ID Generated.")
         with tab3: st.info("System Operational. Minting active.")
 
-    # 6. QUALITY LAB
+    # QUALITY LAB
     elif menu == "QUALITY LAB":
         st.markdown("## 🧪 QUALITY CONTROL LAB")
-        with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** Automated Quality Assurance.\n**Engineer's Logic:** ISO 6330 & ASTM D3776 Standard Implementation.")
         test = st.selectbox("Select Protocol", ["GSM Calc", "Shrinkage Sim", "AQL Inspector"])
         if test == "GSM Calc":
             c1, c2 = st.columns(2); w = c1.number_input("Sample Weight (g)", 2.5); a = c2.selectbox("Cut Size", ["100 cm²", "A4"])
             if st.button("CALCULATE GSM"):
                 res = w * 100 if a == "100 cm²" else w * 16
                 st.metric("RESULT", f"{res:.1f} g/m²")
-                if res < 140: st.warning("Comment: Lightweight (Sheer).")
-                elif res > 180: st.success("Comment: Good T-Shirt weight.")
-                else: st.info("Comment: Standard Single Jersey.")
         elif test == "Shrinkage Sim":
             st.write("### 📏 Dimensional Stability")
             c1, c2 = st.columns(2); l_b = c1.number_input("Length Before (cm)", 50.0); l_a = c2.number_input("Length After (cm)", 48.0)
@@ -677,16 +631,12 @@ if check_password():
             if st.button("CALCULATE SHRINKAGE"):
                 shrink_l = ((l_b - l_a) / l_b) * 100; shrink_w = ((w_b - w_a) / w_b) * 100
                 col_res1, col_res2 = st.columns(2); col_res1.metric("Length Shrinkage", f"-{shrink_l:.1f}%"); col_res2.metric("Width Shrinkage", f"-{shrink_w:.1f}%")
-                if shrink_l > 5.0 or shrink_w > 5.0: st.error("❌ FAILED: Exceeds 5% tolerance.")
-                else: st.success("✅ PASSED: Within ISO standards.")
         elif test == "AQL Inspector":
             qty = st.number_input("Lot Qty", 5000); st.info("Inspect 200 pcs. Reject if > 10 defects (AQL 2.5).")
 
-    # 7. FACTORY STATUS
+    # FACTORY STATUS
     elif menu == "FACTORY STATUS":
         st.markdown("## 🏭 FACTORY STATUS")
-        with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** Live Machinery Health.\n**Engineer's Logic:** Real-time RPM/Temp sensor monitoring.")
         c1, c2, c3 = st.columns(3)
         fig_speed = go.Figure(go.Indicator(mode="gauge+number", value=random.randint(750, 850), title={'text': "Loom RPM"}, gauge={'axis': {'range': [0, 1000]}, 'bar': {'color': "#00ff88"}}))
         fig_speed.update_layout(height=200, paper_bgcolor='rgba(0,0,0,0)', font={'color': "white"})
@@ -696,11 +646,9 @@ if check_password():
         c2.plotly_chart(fig_temp, use_container_width=True)
         c3.info("Loom #4: Bearing Failure predicted in 48 hours.")
 
-    # 8. FABRIC SCANNER
+    # FABRIC SCANNER
     elif menu == "FABRIC SCANNER":
         st.markdown("## 👁️ FABRIC DEFECT SCANNER")
-        with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** Automated Visual Inspection.\n**Engineer's Logic:** OpenCV Computer Vision for contour detection.")
         up = st.file_uploader("Upload Fabric Feed")
         if up:
             img, cnt = process_fabric_image(up)
@@ -708,34 +656,27 @@ if check_password():
             if cnt > 0: st.error("⚠️ QUALITY THRESHOLD BREACHED")
             else: st.success("✅ GRADE A CERTIFIED")
 
-    # 9. LOGISTICS
+    # LOGISTICS
     elif menu == "LOGISTICS":
         st.markdown("## 🌍 GLOBAL LOGISTICS")
-        with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** Live Shipment Tracking.\n**Engineer's Logic:** Geospatial visualization of shipping routes.")
         data = [{"source": [90.4, 23.8], "target": [-74.0, 40.7], "color": [0, 255, 136]}] 
         layer = pdk.Layer("ArcLayer", data=data, get_width=5, get_source_position="source", get_target_position="target", get_source_color="color", get_target_color="color")
         st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=pdk.ViewState(latitude=20, longitude=0, zoom=1, pitch=40), map_style="mapbox://styles/mapbox/dark-v10"))
         st.dataframe(pd.DataFrame({"Vessel": ["Ever Given", "Maersk Alabama"], "Dest": ["NYC", "Hamburg"], "ETA": ["4 Days", "12 Days"], "Status": ["On Time", "Delayed"]}), use_container_width=True)
 
-    # 10. COSTING
+    # COSTING
     elif menu == "COSTING":
         st.markdown("## 💰 COSTING CALCULATOR")
-        with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
-            st.markdown("**CEO Summary:** The deal closer. Tells you exactly how much money you make on a specific order.")
         p = st.number_input("Price", 4.50)
         margin = p - (yarn_cost+0.75)
         st.metric("Margin", f"${margin:.2f}/kg")
-        if margin < 0.20: st.error("Comment: Margin too low.")
-        elif margin > 1.00: st.success("Comment: Excellent margin.")
-        else: st.warning("Comment: Standard industry margin.")
         if st.button("Save"): db_log_deal("Test", 0, p, 0, 0); st.success("Saved")
 
     elif menu == "DATABASE":
         st.markdown("## 🗄️ ORDER HISTORY")
         st.dataframe(db_fetch_table("deals"), use_container_width=True)
 
-    # 11. SYSTEM GUIDE
+    # SYSTEM GUIDE
     elif menu == "SYSTEM GUIDE":
         st.markdown("## 🎓 ROTex SYSTEM GUIDE")
         tab_guide1, tab_guide2, tab_guide3, tab_guide4 = st.tabs(["Market Logic", "Quality Standards", "R&D Blueprints", "Training Video"])
@@ -753,5 +694,5 @@ if check_password():
             if graphviz_installed: st.graphviz_chart('''digraph G { rankdir=TD; node [shape=box, style=filled, fillcolor="#222", fontcolor="white"]; Mic -> FFT -> Freq -> AI -> Alert; }''')
         with tab_guide4:
              st.markdown('<div class="guide-card"><h3>🎥 OPERATOR TRAINING</h3></div>', unsafe_allow_html=True)
-             st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ") # Placeholder Video
+             st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
              st.caption("Module 1: System Calibration & Maintenance")
