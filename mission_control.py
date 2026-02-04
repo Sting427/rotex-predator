@@ -144,11 +144,35 @@ st.markdown("""
         color: #000;
         box-shadow: 0 0 20px rgba(0, 210, 255, 0.6);
     }
+    
+    /* 9. CHAT BUBBLES */
+    .chat-bubble-me {
+        background: rgba(0, 210, 255, 0.1);
+        border: 1px solid #00d2ff;
+        border-radius: 15px 15px 0px 15px;
+        padding: 10px;
+        margin: 5px;
+        text-align: right;
+        float: right;
+        clear: both;
+        max-width: 70%;
+    }
+    .chat-bubble-other {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid #666;
+        border-radius: 15px 15px 15px 0px;
+        padding: 10px;
+        margin: 5px;
+        text-align: left;
+        float: left;
+        clear: both;
+        max-width: 70%;
+    }
     </style>
     """, unsafe_allow_html=True)
 
 # --- 🟢 SYSTEM STATUS MARKER ---
-st.success("SYSTEM STATUS: v33.0 (ELITE UI + v32 LOGIC CORE) IS LIVE")
+st.success("SYSTEM STATUS: v34.0 (TACTICAL COMMS MODULE ACTIVE)")
 
 # --- 🗄️ DATABASE & AUTO-SEEDING ---
 DB_FILE = "rotex_core.db"
@@ -159,6 +183,8 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS deals (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, buyer TEXT, qty REAL, price REAL, cost REAL, margin REAL)''')
     c.execute('''CREATE TABLE IF NOT EXISTS scans (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, defects INTEGER, status TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS employees (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, role TEXT, salary REAL, status TEXT)''')
+    # NEW CHAT TABLE
+    c.execute('''CREATE TABLE IF NOT EXISTS chat_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, user TEXT, message TEXT)''')
     
     # --- AUTO-SEED FAKE DATA IF EMPTY ---
     c.execute("SELECT count(*) FROM employees")
@@ -194,6 +220,11 @@ def db_log_deal(buyer, qty, price, cost, margin):
 def db_add_employee(name, role, salary):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     c.execute("INSERT INTO employees (name, role, salary, status) VALUES (?, ?, ?, ?)", (name, role, salary, "Active"))
+    conn.commit(); conn.close()
+
+def db_post_chat(user, message):
+    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
+    c.execute("INSERT INTO chat_logs (timestamp, user, message) VALUES (?, ?, ?)", (datetime.now().strftime("%H:%M"), user, message))
     conn.commit(); conn.close()
 
 def db_fetch_table(table_name):
@@ -328,7 +359,8 @@ if check_password():
         # --- UPDATE MENU WITH NEW FEATURES ---
         menu = st.radio("MAIN MENU", [
             "MARKET INTELLIGENCE", "COMPETITOR PRICING", "CHAOS THEORY", 
-            "ESG PULSE 🌿", "NEURAL SCHEDULER 🧠", "SMART GRID ⚡", # <--- NEW HIGH VALUE FEATURES
+            "ESG PULSE 🌿", "NEURAL SCHEDULER 🧠", "SMART GRID ⚡", 
+            "LIVE SUPPORT 💬",  # <--- NEW MODULE ADDED HERE
             "HR COMMAND", "R&D INNOVATION", "QUALITY LAB", 
             "FACTORY STATUS", "FABRIC SCANNER", "LOGISTICS", "COSTING", 
             "DATABASE", "SYSTEM GUIDE"
@@ -517,6 +549,36 @@ if check_password():
         fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_title="Hour of Day", yaxis_title="Kilowatts (kW)")
         st.plotly_chart(fig, use_container_width=True)
         st.success("✅ **Recommendation:** Shift 'Dyeing Batch 4' to 02:00 AM to save BDT 15,000.")
+
+    # --- 🆕 NEW FEATURE 4: LIVE SUPPORT (Tactical Comms) ---
+    elif menu == "LIVE SUPPORT 💬":
+        st.markdown("## 💬 TACTICAL COMMS")
+        with st.expander("ℹ️ INTEL: WHAT IS THIS?"):
+            st.markdown("**CEO Summary:** WhatsApp for your Factory Floor.\n**Engineer's Logic:** Real-time persistence chat via SQLite.")
+
+        # Chat container
+        chat_container = st.container()
+        
+        # User input
+        with st.form("chat_form", clear_on_submit=True):
+            user_msg = st.text_input("Enter Message (Protocol 9):", placeholder="Report issue or status...")
+            submitted = st.form_submit_button("SEND TRANSMISSION")
+            if submitted and user_msg:
+                db_post_chat("CEO (You)", user_msg)
+        
+        # Display Logic
+        with chat_container:
+            df_chat = db_fetch_table("chat_logs")
+            if not df_chat.empty:
+                # Reverse to show newest at bottom if we were scrolling, but Streamlit renders top-down. 
+                # We show last 10 messages.
+                for index, row in df_chat.head(10).iterrows():
+                    if row['user'] == "CEO (You)":
+                        st.markdown(f"<div class='chat-bubble-me'><b>{row['user']}</b> [{row['timestamp']}]<br>{row['message']}</div>", unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"<div class='chat-bubble-other'><b>{row['user']}</b> [{row['timestamp']}]<br>{row['message']}</div>", unsafe_allow_html=True)
+            else:
+                st.info("No active transmissions. Channel clear.")
 
 
     # 4. HR COMMAND (NEW MODULE)
