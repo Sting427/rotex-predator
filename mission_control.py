@@ -34,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 🎨 THE "CYBER-TILE" UI ENGINE (v35.0 PRESERVED) ---
+# --- 🎨 THE "YOUTUBE-STYLE" UI ENGINE (v40.0) ---
 st.markdown("""
     <style>
     /* 1. IMPORT FUTURISTIC FONTS */
@@ -88,14 +88,14 @@ st.markdown("""
         text-shadow: 0px 0px 20px rgba(0, 210, 255, 0.3);
     }
 
-    /* 5. SIDEBAR & MENU OPTIMIZATION (CYBER-TILES RESTORED) */
+    /* 5. SIDEBAR & MENU OPTIMIZATION */
     section[data-testid="stSidebar"] {
         background: rgba(0, 0, 0, 0.6);
         backdrop-filter: blur(20px);
         border-right: 1px solid rgba(255, 255, 255, 0.1);
     }
     
-    /* MENU TILES TRANSFORMATION */
+    /* MENU TILES */
     section[data-testid="stSidebar"] div.stRadio > div[role="radiogroup"] > label {
         background: rgba(255, 255, 255, 0.03);
         padding: 12px 15px;
@@ -107,7 +107,6 @@ st.markdown("""
         align-items: center;
     }
 
-    /* Hover State for Menu Tiles */
     section[data-testid="stSidebar"] div.stRadio > div[role="radiogroup"] > label:hover {
         background: rgba(0, 210, 255, 0.1);
         border-color: rgba(0, 210, 255, 0.5);
@@ -194,11 +193,17 @@ st.markdown("""
         text-align: left; float: left; border-radius: 0px 15px 15px 15px; width: 100%; max-width: 100%;
         border-left: 3px solid #00d2ff;
     }
+
+    /* 10. YOUTUBE CHIPS (For Video Vault) */
+    div[data-testid="stHorizontalBlock"] > div[class*="stRadio"] > div[role="radiogroup"] {
+        background: transparent !important;
+        border: none !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 
 # --- 🟢 SYSTEM STATUS MARKER ---
-st.success("SYSTEM STATUS: v39.0 (SENTIMENT ENGINE: LIKE/DISLIKE ONLINE)")
+st.success("SYSTEM STATUS: v40.0 (YOUTUBE INTERFACE REDESIGN)")
 
 # --- 🗄️ DATABASE ---
 DB_FILE = "rotex_core.db"
@@ -535,119 +540,85 @@ if check_password():
         fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_title="Hour of Day", yaxis_title="Kilowatts (kW)")
         st.plotly_chart(fig, use_container_width=True)
 
-    # --- 🆕 NEW FEATURE: VIDEO VAULT (NEURAL EDITION) ---
+    # --- 🆕 NEW FEATURE: VIDEO VAULT (YOUTUBE REDESIGN) ---
     elif menu == "VIDEO VAULT 🎥":
-        st.markdown("## 🎥 ROTex KNOWLEDGE CORE")
+        st.markdown("## 🎥 ROTex STREAM")
         
-        tab_nexus, tab_feed = st.tabs(["🕸️ NEURAL NEXUS", "📺 QUANTUM FEED"])
-        
-        # TAB 1: 3D VISUALIZATION
-        with tab_nexus:
-            st.markdown("### 🧠 KNOWLEDGE TOPOLOGY")
-            df_vids = db_fetch_table("video_library")
-            if not df_vids.empty:
-                # 3D Node Logic
-                nodes = []
-                for _, row in df_vids.iterrows():
-                    # Generate deterministic random 3D coords based on category to cluster them
-                    seed_val = sum(bytearray(row['category'].encode('utf-8')))
-                    random.seed(seed_val)
-                    x, y, z = random.uniform(-1,1), random.uniform(-1,1), random.uniform(-1,1)
-                    nodes.append({'x': x, 'y': y, 'z': z, 'title': row['title'], 'cat': row['category']})
-                
-                df_nodes = pd.DataFrame(nodes)
-                fig_3d = px.scatter_3d(df_nodes, x='x', y='y', z='z', color='cat', hover_name='title', size_max=20, opacity=0.8)
-                fig_3d.update_layout(template="plotly_dark", height=500, scene=dict(xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False)))
-                st.plotly_chart(fig_3d, use_container_width=True)
-                st.info("Interactive 3D Graph: Nodes represent video assets. Colors indicate Knowledge Clusters.")
-            else:
-                st.warning("Nexus Offline: Insufficient Data Points.")
+        # 1. YOUTUBE-STYLE HEADER (Search + Upload)
+        c_search, c_add = st.columns([4, 1])
+        with c_search:
+            search_query = st.text_input("Search", placeholder="Search your library...", label_visibility="collapsed")
+        with c_add:
+            show_upload = st.checkbox("➕ ADD VIDEO", help="Open Upload Studio")
 
-        # TAB 2: PLAYER & BLACK BOX
-        with tab_feed:
-            # 1. CONTROLS (Upload vs Link)
-            col_input, col_view = st.columns([1, 2])
-            with col_input:
-                with st.expander("📤 UPLOAD TRANSMITTER", expanded=True):
-                    mode = st.radio("Source", ["🔗 Link", "📂 File"], label_visibility="collapsed")
-                    if mode == "🔗 Link":
-                        yt_url = st.text_input("YouTube URL")
-                        yt_title = st.text_input("Title", "Briefing #001")
-                        yt_cat = st.selectbox("Sector", ["Training", "R&D", "Market", "Security", "General"])
-                        if st.button("ENCRYPT TO VAULT"):
-                            if yt_url:
-                                db_add_video(yt_title, yt_url, yt_cat)
-                                st.success("Asset Secured")
-                    elif mode == "📂 File":
-                        st.info("⚠️ Session Cache Only")
-                        uploaded_file = st.file_uploader("MP4/MOV", type=["mp4", "mov"])
-                        if uploaded_file: st.video(uploaded_file)
+        # 2. UPLOAD STUDIO (Hidden by default)
+        if show_upload:
+            with st.container():
+                st.markdown("<div style='background: #111; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #333;'>", unsafe_allow_html=True)
+                u_c1, u_c2 = st.columns([1, 1])
+                with u_c1:
+                    st.markdown("#### 🔗 YouTube Link")
+                    yt_url = st.text_input("URL", key="yt_url_in")
+                    yt_title = st.text_input("Title", key="yt_title_in")
+                    yt_cat = st.selectbox("Category", ["Training", "R&D", "Market", "Safety", "General"], key="yt_cat_in")
+                    if st.button("PUBLISH TO VAULT", use_container_width=True):
+                        if yt_url and yt_title:
+                            db_add_video(yt_title, yt_url, yt_cat)
+                            st.toast("✅ Video Published!"); time.sleep(1); st.rerun()
+                with u_c2:
+                    st.markdown("#### 📂 Local File")
+                    up_file = st.file_uploader("Drag & Drop MP4", type=['mp4'])
+                    if up_file: st.video(up_file)
+                st.markdown("</div>", unsafe_allow_html=True)
 
-                # CINEMA SEARCH
-                st.markdown("### 🔍 SEARCH PROTOCOL")
-                search_q = st.text_input("Filter Assets...", placeholder="Type keyword...")
+        # 3. FILTER CHIPS
+        df_videos = db_fetch_table("video_library")
+        categories = ["All"] + list(df_videos['category'].unique()) if not df_videos.empty else ["All"]
+        selected_cat = st.radio("Filters", categories, horizontal=True, label_visibility="collapsed")
 
-            # 2. THE VIDEO GRID + BLACK BOX + SENTIMENT
-            with col_view:
-                df_vids = db_fetch_table("video_library")
-                if search_q:
-                    df_vids = df_vids[df_vids['title'].str.contains(search_q, case=False)]
+        # 4. THE VIDEO GRID
+        if not df_videos.empty:
+            filtered_df = df_videos.copy()
+            if search_query: filtered_df = filtered_df[filtered_df['title'].str.contains(search_query, case=False)]
+            if selected_cat != "All": filtered_df = filtered_df[filtered_df['category'] == selected_cat]
 
-                if not df_vids.empty:
-                    for index, row in df_vids.iterrows():
+            if not filtered_df.empty:
+                cols = st.columns(3) # 3-Column Grid
+                for index, row in filtered_df.iterrows():
+                    col = cols[index % 3]
+                    with col:
                         clean_url = row['url'].replace("/live/", "/watch?v=")
+                        st.video(clean_url)
                         
-                        with st.container():
-                            # HEADER & RATING BADGE
-                            rating_badge = "⚪" # Default
-                            if row['rating'] == 'Like': rating_badge = "👍"
-                            elif row['rating'] == 'Dislike': rating_badge = "👎"
-
-                            st.markdown(f"""
-                            <div class="video-card">
-                                <div style="display:flex; justify-content:space-between; align-items:center;">
-                                    <span style="font-family:'Rajdhani'; font-weight:bold; font-size:20px; color:#00d2ff;">{row['title']}</span>
-                                    <div>
-                                        <span style="border:1px solid #555; padding:2px 8px; border-radius:4px; font-size:10px; color:#888; margin-right:5px;">{row['category']}</span>
-                                        <span style="font-size:14px;">{rating_badge}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            
-                            # PLAYER + CONTROLS
-                            col_v, col_c = st.columns([6, 1])
-                            with col_v: st.video(clean_url)
-                            with col_c: 
-                                # CONTROL PANEL
-                                if st.button("👍", key=f"like_{row['id']}"): 
-                                    db_rate_video(row['id'], "Like"); st.rerun()
-                                if st.button("👎", key=f"dis_{row['id']}"): 
-                                    db_rate_video(row['id'], "Dislike"); st.rerun()
-                                if st.button("🗑️", key=f"del_{row['id']}"): 
-                                    db_delete_video(row['id']); st.rerun()
-
-                            # BLACK BOX (NOTES)
-                            with st.expander(f"📝 BLACK BOX LOGS [ID: {row['id']}]"):
-                                n_col1, n_col2 = st.columns([3, 2])
-                                with n_col1:
-                                    note_in = st.text_input("Add Intelligence:", key=f"n_in_{row['id']}")
-                                    if st.button("LOG ENTRY", key=f"n_btn_{row['id']}") and note_in:
-                                        db_add_note(row['id'], note_in)
-                                        st.rerun()
-                                with n_col2:
-                                    # FETCH NOTES
-                                    conn = sqlite3.connect(DB_FILE); c = conn.cursor()
-                                    notes_df = pd.read_sql_query(f"SELECT * FROM video_notes WHERE video_id={row['id']} ORDER BY id DESC", conn)
-                                    conn.close()
-                                    if not notes_df.empty:
-                                        for _, n_row in notes_df.iterrows():
-                                            st.markdown(f"<div class='note-bubble'><b>{n_row['user']}</b>: {n_row['note']} <span style='font-size:8px; color:#666'>({n_row['timestamp']})</span></div>", unsafe_allow_html=True)
-                                    else:
-                                        st.caption("No intel logged.")
-                            st.markdown("---")
-                else:
-                    st.info("Archives Empty.")
+                        # Meta Data & Rating Badge
+                        rating_icon = "🤍"
+                        if row['rating'] == 'Like': rating_icon = "👍"
+                        elif row['rating'] == 'Dislike': rating_icon = "👎"
+                        
+                        st.markdown(f"""
+                        <div style="padding: 5px 0px;">
+                            <div style="font-weight: 700; font-size: 16px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{row['title']}</div>
+                            <div style="font-size: 12px; color: #888;">{row['category']} • {rating_icon}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Controls
+                        b1, b2, b3 = st.columns([1,1,1])
+                        with b1: 
+                            if st.button("👍", key=f"l_{row['id']}"): db_rate_video(row['id'], "Like"); st.rerun()
+                        with b2: 
+                            if st.button("👎", key=f"d_{row['id']}"): db_rate_video(row['id'], "Dislike"); st.rerun()
+                        with b3: 
+                            if st.button("🗑️", key=f"x_{row['id']}"): db_delete_video(row['id']); st.rerun()
+                        
+                        with st.expander("📝 Notes"):
+                            n_in = st.text_input("Add Note", key=f"n_{row['id']}")
+                            if st.button("Save", key=f"ns_{row['id']}") and n_in: db_add_note(row['id'], n_in); st.rerun()
+                            # Show existing notes would go here
+            else:
+                st.info("No videos found matching criteria.")
+        else:
+            st.warning("Vault Empty. Click '➕ ADD VIDEO' to begin.")
 
     # LIVE SUPPORT
     elif menu == "LIVE SUPPORT 💬":
