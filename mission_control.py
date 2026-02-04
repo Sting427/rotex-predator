@@ -34,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 🎨 THE "ELITE" VISUAL LAYER (CSS ONLY - NO LOGIC CHANGES) ---
+# --- 🎨 THE "CYBER-TILE" UI ENGINE (v35.0 UPDATE) ---
 st.markdown("""
     <style>
     /* 1. IMPORT FUTURISTIC FONTS */
@@ -88,13 +88,39 @@ st.markdown("""
         text-shadow: 0px 0px 20px rgba(0, 210, 255, 0.3);
     }
 
-    /* 5. SIDEBAR */
+    /* 5. SIDEBAR & MENU OPTIMIZATION (THE FIX) */
     section[data-testid="stSidebar"] {
-        background: rgba(0, 0, 0, 0.4);
+        background: rgba(0, 0, 0, 0.6);
         backdrop-filter: blur(20px);
         border-right: 1px solid rgba(255, 255, 255, 0.1);
     }
     
+    /* --- MENU TILES TRANSFORMATION --- */
+    /* Target the labels inside the radio button group in the sidebar */
+    section[data-testid="stSidebar"] div.stRadio > div[role="radiogroup"] > label {
+        background: rgba(255, 255, 255, 0.03); /* Subtle glass background */
+        padding: 12px 15px; /* Add internal breathing room */
+        margin-bottom: 8px; /* Add vertical spacing between items */
+        border-radius: 8px; /* Rounded corners */
+        border: 1px solid rgba(255, 255, 255, 0.05); /* Faint border */
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth physics */
+        display: flex; /* Ensure layout alignment */
+        align-items: center;
+    }
+
+    /* Hover State for Menu Tiles */
+    section[data-testid="stSidebar"] div.stRadio > div[role="radiogroup"] > label:hover {
+        background: rgba(0, 210, 255, 0.1); /* Cyan tint on hover */
+        border-color: rgba(0, 210, 255, 0.5); /* Glowing border */
+        padding-left: 25px; /* Slide animation to the right */
+        color: #ffffff !important;
+        cursor: pointer;
+        box-shadow: 0 0 15px rgba(0, 210, 255, 0.1);
+    }
+    
+    /* Selected State (Streamlit doesn't expose a clean selected class for labels easily via CSS, 
+       but the hover effect creates the premium feel we need). */
+
     /* 6. LOGO ANIMATION */
     .rotex-text {
         font-family: 'Rajdhani', sans-serif;
@@ -172,7 +198,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # --- 🟢 SYSTEM STATUS MARKER ---
-st.success("SYSTEM STATUS: v34.0 (TACTICAL COMMS MODULE ACTIVE)")
+st.success("SYSTEM STATUS: v35.0 (MENU AESTHETICS UPGRADE)")
 
 # --- 🗄️ DATABASE & AUTO-SEEDING ---
 DB_FILE = "rotex_core.db"
@@ -183,7 +209,6 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS deals (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, buyer TEXT, qty REAL, price REAL, cost REAL, margin REAL)''')
     c.execute('''CREATE TABLE IF NOT EXISTS scans (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, defects INTEGER, status TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS employees (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, role TEXT, salary REAL, status TEXT)''')
-    # NEW CHAT TABLE
     c.execute('''CREATE TABLE IF NOT EXISTS chat_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, user TEXT, message TEXT)''')
     
     # --- AUTO-SEED FAKE DATA IF EMPTY ---
@@ -360,7 +385,7 @@ if check_password():
         menu = st.radio("MAIN MENU", [
             "MARKET INTELLIGENCE", "COMPETITOR PRICING", "CHAOS THEORY", 
             "ESG PULSE 🌿", "NEURAL SCHEDULER 🧠", "SMART GRID ⚡", 
-            "LIVE SUPPORT 💬",  # <--- NEW MODULE ADDED HERE
+            "LIVE SUPPORT 💬", 
             "HR COMMAND", "R&D INNOVATION", "QUALITY LAB", 
             "FACTORY STATUS", "FABRIC SCANNER", "LOGISTICS", "COSTING", 
             "DATABASE", "SYSTEM GUIDE"
