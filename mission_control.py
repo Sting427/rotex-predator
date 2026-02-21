@@ -34,7 +34,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 🎨 THE "YOUTUBE-STYLE" UI ENGINE (v42.0) ---
+# --- 🎨 THE "YOUTUBE-STYLE" UI ENGINE ---
 st.markdown("""
     <style>
     /* 1. IMPORT FUTURISTIC FONTS */
@@ -77,6 +77,24 @@ st.markdown("""
         border-color: rgba(0, 210, 255, 0.5);
     }
     
+    /* RECOMMENDATION CARD STYLE */
+    .rec-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        transition: all 0.2s;
+    }
+    .rec-card:hover {
+        border-color: #00d2ff;
+        background: rgba(0, 210, 255, 0.1);
+        cursor: pointer;
+    }
+    .rec-title { font-size: 13px; font-weight: 600; color: #eee; margin-bottom: 4px; line-height: 1.3; }
+    .rec-meta { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+
     /* 4. HEADERS */
     h1, h2, h3 {
         font-family: 'Rajdhani', sans-serif;
@@ -199,39 +217,11 @@ st.markdown("""
         background: transparent !important;
         border: none !important;
     }
-
-    /* 11. RECOMMENDATION CARD (NEW) */
-    .rec-card {
-        background: rgba(255, 255, 255, 0.05);
-        padding: 10px;
-        border-radius: 8px;
-        margin-bottom: 8px;
-        border: 1px solid #333;
-        transition: all 0.2s;
-    }
-    .rec-card:hover {
-        border-color: #00d2ff;
-        background: rgba(0, 210, 255, 0.1);
-        cursor: pointer;
-    }
-    .rec-title {
-        font-size: 13px;
-        font-weight: bold;
-        color: #eee;
-        margin-bottom: 4px;
-        line-height: 1.3;
-    }
-    .rec-meta {
-        font-size: 10px;
-        color: #aaa;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
     </style>
     """, unsafe_allow_html=True)
 
 # --- 🟢 SYSTEM STATUS MARKER ---
-st.success("SYSTEM STATUS: v42.0 (YOUTUBE ENGINE + FULL RESTORE)")
+st.success("SYSTEM STATUS: v42.1 (CRITICAL BUG FIX & FULL RESTORATION)")
 
 # --- 🗄️ DATABASE ---
 DB_FILE = "rotex_core.db"
@@ -245,13 +235,13 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS employees (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, role TEXT, salary REAL, status TEXT)''')
     c.execute('''CREATE TABLE IF NOT EXISTS chat_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT, user TEXT, message TEXT)''')
     
-    # VIDEO LIBRARY (Updated with RATING column)
+    # VIDEO LIBRARY
     c.execute('''CREATE TABLE IF NOT EXISTS video_library (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, type TEXT, url TEXT, category TEXT, rating TEXT DEFAULT 'None')''')
     
     # VIDEO NOTES
     c.execute('''CREATE TABLE IF NOT EXISTS video_notes (id INTEGER PRIMARY KEY AUTOINCREMENT, video_id INTEGER, user TEXT, note TEXT, timestamp TEXT)''')
 
-    # --- MIGRATION CHECK (Add 'rating' column if it doesn't exist for older v38 users) ---
+    # --- MIGRATION CHECK ---
     try:
         c.execute("ALTER TABLE video_library ADD COLUMN rating TEXT DEFAULT 'None'")
     except sqlite3.OperationalError:
@@ -312,7 +302,6 @@ def db_add_note(vid_id, note):
     c.execute("INSERT INTO video_notes (video_id, user, note, timestamp) VALUES (?, ?, ?, ?)", (vid_id, "CEO", note, datetime.now().strftime("%Y-%m-%d %H:%M")))
     conn.commit(); conn.close()
 
-# NEW: RATE VIDEO
 def db_rate_video(vid_id, rating):
     conn = sqlite3.connect(DB_FILE); c = conn.cursor()
     c.execute("UPDATE video_library SET rating=? WHERE id=?", (rating, vid_id))
@@ -338,7 +327,7 @@ def check_password():
         return False
     return st.session_state["password_correct"]
 
-# --- 🧠 LOGIC & UTILS ---
+# --- 🧠 LOGIC & UTILS (🚨 CRITICAL FIX APPLIED HERE) ---
 @st.cache_data(ttl=3600)
 def load_market_data():
     dates = pd.date_range(end=pd.Timestamp.today(), periods=100)
@@ -354,9 +343,16 @@ def load_market_data():
             else: return df_safe
         if 'Close' in data: data = data['Close']
         if data.empty: return df_safe
+        
         data.columns = ['Cotton_USD', 'Gas_USD']
         data['Yarn_Fair_Value'] = ((data['Cotton_USD']/100) * 1.6) + (data['Gas_USD'] * 0.15) + 0.40
-        return data.dropna()
+        
+        # 🚨 FIX: Ensure dropna() doesn't result in an empty dataframe causing an IndexError later
+        final_data = data.dropna()
+        if final_data.empty:
+            return df_safe
+        return final_data
+        
     except Exception: return df_safe
 
 def get_news_stealth():
@@ -426,9 +422,17 @@ if check_password():
         st.divider()
         if st.button("LOGOUT"): st.session_state["password_correct"] = False; st.rerun()
 
+    # 🚨 FINAL FAILSAFE CHECK
     df = load_market_data()
-    if not df.empty: yarn_cost = df['Yarn_Fair_Value'].iloc[-1]
-    else: yarn_cost = 4.50
+    if df is None or df.empty:
+        # Ultimate fallback if everything else fails
+        dates = pd.date_range(end=pd.Timestamp.today(), periods=100)
+        df = pd.DataFrame(index=dates)
+        df['Cotton_USD'] = np.random.normal(85, 2, 100)
+        df['Gas_USD'] = np.random.normal(3.0, 0.1, 100)
+        df['Yarn_Fair_Value'] = ((df['Cotton_USD']/100) * 1.6) + (df['Gas_USD'] * 0.15) + 0.40
+        
+    yarn_cost = df['Yarn_Fair_Value'].iloc[-1]
 
     # 1. MARKET INTELLIGENCE
     if menu == "MARKET INTELLIGENCE":
@@ -568,7 +572,7 @@ if check_password():
         fig.update_layout(template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_title="Hour of Day", yaxis_title="Kilowatts (kW)")
         st.plotly_chart(fig, use_container_width=True)
 
-    # --- 🆕 NEW FEATURE: VIDEO VAULT (YOUTUBE REDESIGN + RECS) ---
+    # --- 🆕 NEW FEATURE: VIDEO VAULT (YOUTUBE REDESIGN) ---
     elif menu == "VIDEO VAULT 🎥":
         st.markdown("## 🎥 ROTex STREAM")
         
@@ -634,16 +638,15 @@ if check_password():
                                 c_a, c_b, c_c = st.columns(3)
                                 # CYBER ICONS
                                 with c_a: 
-                                    if st.button("▲", key=f"up_{row['id']}", help="Like"): db_rate_video(row['id'], "Like"); st.rerun()
+                                    if st.button("▲", key=f"up_{row['id']}"): db_rate_video(row['id'], "Like"); st.rerun()
                                 with c_b: 
-                                    if st.button("▼", key=f"dn_{row['id']}", help="Dislike"): db_rate_video(row['id'], "Dislike"); st.rerun()
+                                    if st.button("▼", key=f"dn_{row['id']}"): db_rate_video(row['id'], "Dislike"); st.rerun()
                                 with c_c: 
-                                    if st.button("🗑️", key=f"dl_{row['id']}", help="Delete"): db_delete_video(row['id']); st.rerun()
+                                    if st.button("🗑️", key=f"dl_{row['id']}"): db_delete_video(row['id']); st.rerun()
                             
                             with st.expander("📝 Notes"):
                                 n_in = st.text_input("Add Note", key=f"n_{row['id']}")
                                 if st.button("Save", key=f"ns_{row['id']}") and n_in: db_add_note(row['id'], n_in); st.rerun()
-                                # Notes would display here
                             st.markdown("</div>", unsafe_allow_html=True)
 
                         # --- RIGHT: RECOMMENDATION ENGINE ---
