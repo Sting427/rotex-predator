@@ -813,3 +813,4 @@ if check_password():
              st.markdown('<div class="guide-card"><h3>🎥 OPERATOR TRAINING</h3></div>', unsafe_allow_html=True)
              st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
              st.caption("Module 1: System Calibration & Maintenance")
+
